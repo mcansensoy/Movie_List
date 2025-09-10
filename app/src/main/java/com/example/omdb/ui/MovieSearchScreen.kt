@@ -1,6 +1,8 @@
 package com.example.omdb.ui
 
+import android.R.attr.onClick
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -13,6 +15,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import coil.compose.AsyncImage
+import com.example.omdb.model.MovieDetail
 import com.example.omdb.model.MovieItem
 
 @Composable
@@ -25,6 +28,7 @@ fun MovieSearchScreen(vm: MovieViewModel = hiltViewModel()) {
     val movies by vm.movies.collectAsState()
     val isLoading by vm.isLoading.collectAsState()
     val error by vm.error.collectAsState()
+    val movieDetails by vm.movieDetails.collectAsState()
 
     Column(modifier = Modifier
         .fillMaxSize()
@@ -64,9 +68,17 @@ fun MovieSearchScreen(vm: MovieViewModel = hiltViewModel()) {
 
         // Liste
         LazyColumn(modifier = Modifier.fillMaxSize()) {
-            items(movies) { movie: MovieItem ->
-                MovieRow(movie)
-                HorizontalDivider(Modifier, DividerDefaults.Thickness, DividerDefaults.color)
+            items(movies) { movie ->
+                Column {
+                    MovieRow(movie, onClick = { vm.toggleMovieDetail(movie.imdbID) })
+
+                    // Eğer bu film için detay yüklenmişse, göster
+                    movieDetails[movie.imdbID]?.let { detail ->
+                        MovieDetailCard(detail)
+                    }
+
+                    HorizontalDivider(Modifier, DividerDefaults.Thickness, DividerDefaults.color)
+                }
             }
 
             // Son olarak "Load more" butonu göstermek istersen:
@@ -87,10 +99,11 @@ fun MovieSearchScreen(vm: MovieViewModel = hiltViewModel()) {
 }
 
 @Composable
-fun MovieRow(movie: MovieItem) {
+fun MovieRow(movie: MovieItem, onClick: () -> Unit) {
     Column(modifier = Modifier
         .fillMaxWidth()
         .padding(8.dp)
+        .clickable { onClick() } // Satıra tıklanabilirlik
     ) {
         Text(text = movie.title, fontWeight = FontWeight.Bold)
         Text(text = "Year: ${movie.year}")
@@ -111,5 +124,22 @@ fun MovieRow(movie: MovieItem) {
         }
 
         Spacer(Modifier.height(8.dp))
+    }
+}
+
+@Composable
+fun MovieDetailCard(detail: MovieDetail) {
+    Card(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(8.dp),
+        elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
+    ) {
+        Column(modifier = Modifier.padding(12.dp)) {
+            Text("IMDB Rating: ${detail.imdbRating ?: "Unknown"}")
+            Text("Genre: ${detail.genre ?: "Unknown"}")
+            Text("Director: ${detail.director ?: "Unknown"}")
+            Text("Plot: ${detail.plot ?: "Unknown"}")
+        }
     }
 }

@@ -2,6 +2,7 @@ package com.example.omdb.ui
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.example.omdb.model.MovieDetail
 import com.example.omdb.model.MovieItem
 import com.example.omdb.repository.MovieRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -49,6 +50,48 @@ class MovieViewModel @Inject constructor(
                 _error.value = t.message ?: "Network error"
             } finally {
                 _isLoading.value = false
+            }
+        }
+    }
+
+
+    private val _movieDetails = MutableStateFlow<Map<String, MovieDetail>>(emptyMap())
+    val movieDetails: StateFlow<Map<String, MovieDetail>> = _movieDetails
+
+    fun toggleMovieDetail(imdbId: String) {
+        viewModelScope.launch {
+            // Eğer detay zaten yüklüyse -> kaldır (gizle)
+            if (_movieDetails.value.containsKey(imdbId)) {
+                _movieDetails.value = _movieDetails.value - imdbId
+            } else {
+                try {
+                    val detail = repository.getMovieDetail(imdbId)
+                    _movieDetails.value = _movieDetails.value + (imdbId to detail) // geçici
+                    /*if (detail.response == "True") {
+                        _movieDetails.value = _movieDetails.value + (imdbId to detail)
+                    } else {
+                        // Hata olursa Unknown'larla dolduralım
+                        _movieDetails.value = _movieDetails.value + (imdbId to MovieDetail(
+                            title = null,
+                            year = null,
+                            imdbRating = "Unknown",
+                            genre = "Unknown",
+                            director = "Unknown",
+                            plot = "Unknown",
+                            response = "False"
+                        ))
+                    }*/
+                } catch (e: Exception) {
+                    _movieDetails.value = _movieDetails.value + (imdbId to MovieDetail(
+                        title = null,
+                        year = null,
+                        imdbRating = "Unknown",
+                        genre = "Unknown",
+                        director = "Unknown",
+                        plot = "Unknown",
+                        response = "False"
+                    ))
+                }
             }
         }
     }

@@ -14,4 +14,6 @@ class MovieRepository @Inject constructor(
     // Sadece network çağrısı yapıp SearchResponse döndürüyoruz.
     suspend fun searchMovies(query: String, page: Int = 1): SearchResponse =
         api.searchMovies(query, page)
+
+    suspend fun getMovieDetail(imdbId: String) = api.getMovieDetail(imdbId)
 }

@@ -27,6 +27,21 @@ class MovieViewModel @Inject constructor(
     private val _error = MutableStateFlow<String?>(null)
     val error: StateFlow<String?> = _error
 
+    private val _query = MutableStateFlow("")
+    val query: StateFlow<String> = _query
+
+    private val _page = MutableStateFlow(1)
+    val page: StateFlow<Int> = _page
+
+    fun updateQuery(newQuery: String) {
+        _query.value = newQuery
+    }
+
+    fun goToPage(newPage: Int) {
+        _page.value = newPage
+        search(_query.value, newPage)
+    }
+
     // Arama fonksiyonu
     fun search(query: String, page: Int = 1) {
         if (query.isBlank()) {

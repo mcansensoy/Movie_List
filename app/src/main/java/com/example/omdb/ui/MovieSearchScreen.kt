@@ -19,17 +19,29 @@ import coil.compose.AsyncImage
 import com.example.omdb.model.MovieDetail
 import com.example.omdb.model.MovieItem
 
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.expandVertically
+import androidx.compose.animation.shrinkVertically
+
+import androidx.compose.foundation.lazy.rememberLazyListState
+import kotlinx.coroutines.launch
+
 @Composable
 fun MovieSearchScreen(vm: MovieViewModel = hiltViewModel()) {
     // Local UI states
-    var query by remember { mutableStateOf("") }
-    var page by remember { mutableStateOf(1) }
+    val query by vm.query.collectAsState()
+    val page by vm.page.collectAsState()
 
     // ViewModel state'lerini Compose'a bağla
     val movies by vm.movies.collectAsState()
     val isLoading by vm.isLoading.collectAsState()
     val error by vm.error.collectAsState()
     val movieDetails by vm.movieDetails.collectAsState()
+
+    val listState = rememberLazyListState()
+    val coroutineScope = rememberCoroutineScope()
 
     Column(modifier = Modifier
         .fillMaxSize()
@@ -41,7 +53,7 @@ fun MovieSearchScreen(vm: MovieViewModel = hiltViewModel()) {
 
         OutlinedTextField(
             value = query,
-            onValueChange = { query = it },
+            onValueChange = { vm.updateQuery(it) },
             label = { Text("Film başlığını girin") },
             modifier = Modifier.fillMaxWidth()
         )
@@ -49,10 +61,7 @@ fun MovieSearchScreen(vm: MovieViewModel = hiltViewModel()) {
         Spacer(Modifier.height(8.dp))
 
         Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.End) {
-            Button(onClick = {
-                page = 1 // yeni arama -> page 1
-                vm.search(query, page)
-            }) {
+            Button(onClick = {vm.goToPage(1)}) {
                 Text("Find")
             }
         }
@@ -68,14 +77,20 @@ fun MovieSearchScreen(vm: MovieViewModel = hiltViewModel()) {
         }
 
         // Liste
-        LazyColumn(modifier = Modifier.fillMaxSize()) {
+        LazyColumn(modifier = Modifier.fillMaxSize(), state = listState) {
             items(movies) { movie ->
                 Column {
                     MovieRow(movie, onClick = { vm.toggleMovieDetail(movie.imdbID) })
 
                     // Eğer bu film için detay yüklenmişse, göster
-                    movieDetails[movie.imdbID]?.let { detail ->
-                        MovieDetailCard(detail)
+                    AnimatedVisibility(
+                        visible = movieDetails[movie.imdbID] != null,
+                        enter = fadeIn() + expandVertically(),
+                        exit = fadeOut() + shrinkVertically()
+                    ) {
+                        movieDetails[movie.imdbID]?.let { detail ->
+                            MovieDetailCard(detail)
+                        }
                     }
 
                     HorizontalDivider(Modifier, DividerDefaults.Thickness, DividerDefaults.color)
@@ -83,42 +98,53 @@ fun MovieSearchScreen(vm: MovieViewModel = hiltViewModel()) {
             }
 
             // Son olarak "Load more" butonu göstermek istersen:
-            item {
-                Spacer(Modifier.height(8.dp))
-                Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.Center) {
-                    Button(
-                        onClick = {
-                            if(page > 1){
-                                page -= 1
-                                vm.search(query, page)
-                            }
-                        },
-                        modifier = Modifier
-                            .width(140.dp)
-                            .defaultMinSize(minHeight = 30.dp)
+            if (movies.isNotEmpty()) {
+                item {
+                    Spacer(Modifier.height(8.dp))
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.Center
                     ) {
-                        Text("Previous Page")
-                    }
+                        // Previous Page
+                        Button(
+                            onClick = {
+                                if (page > 1) {
+                                    vm.goToPage(page - 1)
+                                    coroutineScope.launch {
+                                        listState.scrollToItem(0) // en üste kay
+                                    }
+                                }
+                            },
+                            enabled = page > 1, // 1. sayfadaysa disable
+                            modifier = Modifier.width(140.dp).defaultMinSize(minHeight = 30.dp)
+                        ) {
+                            Text("Previous Page")
+                        }
 
-                    Spacer(Modifier.width(12.dp))
-                    Box(modifier = Modifier.width(20.dp)) {
-                        Text("$page",
-                            modifier = Modifier.align(Alignment.Center))
-                    }
+                        Spacer(Modifier.width(12.dp))
 
-                    Spacer(Modifier.width(12.dp))
+                        Text(
+                            "$page",
+                            modifier = Modifier.align(Alignment.CenterVertically)
+                        )
 
-                    Button(
-                        onClick = {
-                            page += 1
-                            vm.search(query, page) // sayfa arttır -> yeni sonuçları getirir (OMDb sayfa başına 10)
-                        },
-                        modifier = Modifier.width(140.dp).defaultMinSize(minHeight = 30.dp)
-                    ) {
-                        Text("Next Page")
+                        Spacer(Modifier.width(12.dp))
+
+                        // Next Page
+                        Button(
+                            onClick = {
+                                vm.goToPage(page + 1)
+                                coroutineScope.launch {
+                                    listState.scrollToItem(0) // en üste kay
+                                }
+                            },
+                            modifier = Modifier.width(140.dp).defaultMinSize(minHeight = 30.dp)
+                        ) {
+                            Text("Next Page")
+                        }
                     }
+                    Spacer(Modifier.height(8.dp))
                 }
-                Spacer(Modifier.height(8.dp))
             }
         }
     }

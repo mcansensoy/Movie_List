@@ -4,6 +4,7 @@ import android.R.attr.onClick
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.*
@@ -85,11 +86,36 @@ fun MovieSearchScreen(vm: MovieViewModel = hiltViewModel()) {
             item {
                 Spacer(Modifier.height(8.dp))
                 Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.Center) {
-                    Button(onClick = {
-                        page += 1
-                        vm.search(query, page) // sayfa arttır -> yeni sonuçları getirir (OMDb sayfa başına 10)
-                    }) {
-                        Text("Load more (page $page)")
+                    Button(
+                        onClick = {
+                            if(page > 1){
+                                page -= 1
+                                vm.search(query, page)
+                            }
+                        },
+                        modifier = Modifier
+                            .width(140.dp)
+                            .defaultMinSize(minHeight = 30.dp)
+                    ) {
+                        Text("Previous Page")
+                    }
+
+                    Spacer(Modifier.width(12.dp))
+                    Box(modifier = Modifier.width(20.dp)) {
+                        Text("$page",
+                            modifier = Modifier.align(Alignment.Center))
+                    }
+
+                    Spacer(Modifier.width(12.dp))
+
+                    Button(
+                        onClick = {
+                            page += 1
+                            vm.search(query, page) // sayfa arttır -> yeni sonuçları getirir (OMDb sayfa başına 10)
+                        },
+                        modifier = Modifier.width(140.dp).defaultMinSize(minHeight = 30.dp)
+                    ) {
+                        Text("Next Page")
                     }
                 }
                 Spacer(Modifier.height(8.dp))
@@ -140,6 +166,28 @@ fun MovieDetailCard(detail: MovieDetail) {
             Text("Genre: ${detail.genre ?: "Unknown"}")
             Text("Director: ${detail.director ?: "Unknown"}")
             Text("Plot: ${detail.plot ?: "Unknown"}")
+
+            Spacer(Modifier.height(12.dp))
+
+            Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.Center) {
+                Button(
+                    onClick = { /*TODO*/ },
+                    modifier = Modifier
+                        .width(160.dp)
+                        .defaultMinSize(minHeight = 40.dp)
+                ) {
+                    Text("Add to completed")
+                }
+                Spacer(Modifier.width(10.dp))
+                Button(
+                    onClick = { /*TODO*/ },
+                    modifier = Modifier
+                        .width(160.dp)
+                        .defaultMinSize(minHeight = 40.dp)
+                ) {
+                    Text("Add to watchlist")
+                }
+            }
         }
     }
 }

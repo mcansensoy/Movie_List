@@ -25,6 +25,8 @@ import androidx.compose.animation.fadeOut
 import androidx.compose.animation.expandVertically
 import androidx.compose.animation.shrinkVertically
 
+import androidx.compose.animation.core.tween
+
 import androidx.compose.foundation.lazy.rememberLazyListState
 import kotlinx.coroutines.launch
 
@@ -43,6 +45,18 @@ fun MovieSearchScreen(vm: MovieViewModel = hiltViewModel()) {
     val listState = rememberLazyListState()
     val coroutineScope = rememberCoroutineScope()
 
+    val yearRange by vm.yearRange.collectAsState()
+    val ratingRange by vm.ratingRange.collectAsState()
+
+    var showFilters by remember { mutableStateOf(false) }
+    var startYear by remember { mutableStateOf("") }
+    var endYear by remember { mutableStateOf("") }
+    var minRating by remember { mutableStateOf("") }
+    var maxRating by remember { mutableStateOf("") }
+    var filterError by remember { mutableStateOf<String?>(null) }
+
+
+
     Column(modifier = Modifier
         .fillMaxSize()
         .padding(16.dp)
@@ -60,11 +74,101 @@ fun MovieSearchScreen(vm: MovieViewModel = hiltViewModel()) {
 
         Spacer(Modifier.height(8.dp))
 
-        Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.End) {
-            Button(onClick = {vm.goToPage(1)}) {
+        Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.Center) {
+            Button(onClick = { showFilters = !showFilters }, modifier = Modifier.width(140.dp).defaultMinSize(minHeight = 32.dp)) {
+                Text(if (showFilters) "Hide Filters" else "Show Filters")
+            }
+            Spacer(Modifier.width(24.dp))
+
+            Button(onClick = {vm.goToPage(1)}, modifier = Modifier.width(140.dp).defaultMinSize(minHeight = 32.dp)) {
                 Text("Find")
             }
         }
+
+
+        Spacer(Modifier.height(12.dp))
+
+        AnimatedVisibility(
+            visible = showFilters,
+            enter = fadeIn(animationSpec = tween(300)) + expandVertically(animationSpec = tween(300)),
+            exit = fadeOut(animationSpec = tween(300)) + shrinkVertically(animationSpec = tween(300))
+        ) {
+            Column(Modifier.padding(8.dp)) {
+                // Year range
+                Row {
+                    OutlinedTextField(
+                        value = startYear,
+                        onValueChange = { startYear = it },
+                        label = { Text("Start Year") },
+                        modifier = Modifier.weight(1f).padding(end = 8.dp)
+                    )
+                    OutlinedTextField(
+                        value = endYear,
+                        onValueChange = { endYear = it },
+                        label = { Text("End Year") },
+                        modifier = Modifier.weight(1f)
+                    )
+                }
+
+                Spacer(Modifier.height(8.dp))
+
+                // Rating range
+                Row {
+                    OutlinedTextField(
+                        value = minRating,
+                        onValueChange = { minRating = it },
+                        label = { Text("Min Rating") },
+                        modifier = Modifier.weight(1f).padding(end = 8.dp)
+                    )
+                    OutlinedTextField(
+                        value = maxRating,
+                        onValueChange = { maxRating = it },
+                        label = { Text("Max Rating") },
+                        modifier = Modifier.weight(1f)
+                    )
+                }
+
+                Spacer(Modifier.height(8.dp))
+
+                Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.Center){
+                    Button(
+                        onClick = {
+                            startYear = ""
+                            endYear = ""
+                            minRating = ""
+                            maxRating = ""
+                            vm.updateYearRange(1900, 2100)
+                            vm.updateRatingRange(0f, 10f)
+                        },
+                        modifier = Modifier.width(140.dp).defaultMinSize(minHeight = 32.dp)
+                    ) {
+                        Text("Clear Filters")
+                    }
+
+                    Spacer(Modifier.width(24.dp))
+
+                    Button(
+                        onClick = {
+                            val success = vm.applyFiltersWithValues(startYear, endYear, minRating, maxRating)
+                            if (!success) {
+                                filterError = "Lütfen sadece sayı giriniz."
+                            } else {
+                                filterError = null
+                            }
+                        },
+                        modifier = Modifier.width(140.dp).defaultMinSize(minHeight = 32.dp)
+                    ) {
+                        Text("Apply Filters")
+                    }
+                }
+
+                filterError?.let {
+                    Spacer(Modifier.height(8.dp))
+                    Text(it, color = MaterialTheme.colorScheme.error)
+                }
+            }
+        }
+
 
         Spacer(Modifier.height(12.dp))
 
@@ -85,8 +189,8 @@ fun MovieSearchScreen(vm: MovieViewModel = hiltViewModel()) {
                     // Eğer bu film için detay yüklenmişse, göster
                     AnimatedVisibility(
                         visible = movieDetails[movie.imdbID] != null,
-                        enter = fadeIn() + expandVertically(),
-                        exit = fadeOut() + shrinkVertically()
+                        enter = fadeIn(animationSpec = tween(300)) + expandVertically(animationSpec = tween(300)),
+                        exit = fadeOut(animationSpec = tween(300)) + shrinkVertically(animationSpec = tween(300))
                     ) {
                         movieDetails[movie.imdbID]?.let { detail ->
                             MovieDetailCard(detail)

@@ -7,5 +7,6 @@ data class MovieItem(
     @SerializedName("Year") val year: String,
     @SerializedName("imdbID") val imdbID: String,
     @SerializedName("Type") val type: String?,
-    @SerializedName("Poster") val poster: String // URL veya "N/A"
+    @SerializedName("Poster") val poster: String, // URL veya "N/A"
+    @SerializedName("imdbRating") val imdbRating: String?
 )

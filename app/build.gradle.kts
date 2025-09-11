@@ -71,15 +71,15 @@ dependencies {
     implementation("com.google.dagger:hilt-android:2.57.1")
     ksp("com.google.dagger:hilt-android-compiler:2.57.1")
     // Hilt + Compose helper
-    implementation("androidx.hilt:hilt-navigation-compose:1.2.0")
+    implementation("androidx.hilt:hilt-navigation-compose:1.3.0") // önceden 1.2.0 idi sıkıntı çıkarsa geri al
 
     implementation("com.google.code.gson:gson:2.13.1")
     implementation("io.coil-kt.coil3:coil-compose:3.3.0")
     implementation("io.coil-kt.coil3:coil-network-okhttp:3.3.0")
 
-    // Lifecycle (ViewModel scope vs.)
-    implementation("androidx.lifecycle:lifecycle-viewmodel-ktx:2.8.7") // :contentReference[oaicite:4]{index=4}
-    implementation("androidx.lifecycle:lifecycle-runtime-ktx:2.8.7")   // :contentReference[oaicite:5]{index=5}
+    // Lifecycle (ViewModel scope vs.) önceden 2.8.7 idi sıkıntı çıkarsa geri al
+    implementation("androidx.lifecycle:lifecycle-viewmodel-ktx:2.9.3") // :contentReference[oaicite:4]{index=4}
+    implementation("androidx.lifecycle:lifecycle-runtime-ktx:2.9.3")   // :contentReference[oaicite:5]{index=5}
 
     // Coroutines
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.10.2")    // :contentReference[oaicite:6]{index=6}
@@ -97,15 +97,18 @@ dependencies {
     implementation("com.squareup.okhttp3:okhttp:5.1.0")                       // :contentReference[oaicite:11]{index=11}
     implementation("com.squareup.okhttp3:logging-interceptor:5.1.0")          // :contentReference[oaicite:12]{index=12}
 
-    // ViewModel + Compose entegrasyonu (gerekli; viewModel() fonksiyonunu sağlar)
-    implementation("androidx.lifecycle:lifecycle-viewmodel-compose:2.8.7")
+    // ViewModel + Compose entegrasyonu (gerekli; viewModel() fonksiyonunu sağlar) önceden 2.8.7 idi sıkıntı çıkarsa geri al
+    implementation("androidx.lifecycle:lifecycle-viewmodel-compose:2.9.3")
 
-// Compose içinde Flow/StateFlow güvenli tüketimi için (öneri)
-    implementation("androidx.lifecycle:lifecycle-runtime-compose:2.8.7")
+// Compose içinde Flow/StateFlow güvenli tüketimi için (öneri) önceden 2.8.7 idi sıkıntı çıkarsa geri al
+    implementation("androidx.lifecycle:lifecycle-runtime-compose:2.9.3")
 
     // --- Coil (image loading in Compose) ---
     implementation("io.coil-kt:coil-compose:2.7.0")
 
     // --- others (optional) ---
     implementation("com.google.code.gson:gson:2.13.1")
+
+    //navigation compose
+    implementation("androidx.navigation:navigation-compose:2.9.4")
 }

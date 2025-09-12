@@ -111,4 +111,14 @@ dependencies {
 
     //navigation compose
     implementation("androidx.navigation:navigation-compose:2.9.4")
+
+    //room
+    val roomVersion = "2.8.0"
+
+    implementation("androidx.room:room-runtime:$roomVersion")
+
+    // If this project uses any Kotlin source, use Kotlin Symbol Processing (KSP)
+    // See Add the KSP plugin to your project
+    ksp("androidx.room:room-compiler:$roomVersion")
+
 }

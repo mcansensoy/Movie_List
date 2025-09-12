@@ -1,7 +1,5 @@
 package com.example.omdb.ui
 
-import android.R.attr.onClick
-import androidx.compose.foundation.Image
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.layout.Arrangement
@@ -28,10 +26,13 @@ import androidx.compose.animation.shrinkVertically
 import androidx.compose.animation.core.tween
 
 import androidx.compose.foundation.lazy.rememberLazyListState
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Menu
+import androidx.navigation.NavController
 import kotlinx.coroutines.launch
 
 @Composable
-fun MovieSearchScreen(vm: MovieViewModel = hiltViewModel()) {
+fun MovieSearchScreen(vm: MovieViewModel = hiltViewModel(), modifier: Modifier) {
     // Local UI states
     val query by vm.query.collectAsState()
     val page by vm.page.collectAsState()
@@ -61,14 +62,16 @@ fun MovieSearchScreen(vm: MovieViewModel = hiltViewModel()) {
         .fillMaxSize()
         .padding(16.dp)
     ) {
-        Text("OMDb Film Arama", style = MaterialTheme.typography.titleMedium)
 
-        Spacer(Modifier.height(8.dp))
+        Spacer(Modifier.height(72.dp))
+        //Text("Search for movies", style = MaterialTheme.typography.titleMedium)
+
+        //Spacer(Modifier.height(8.dp))
 
         OutlinedTextField(
             value = query,
             onValueChange = { vm.updateQuery(it) },
-            label = { Text("Film başlığını girin") },
+            label = { Text("Type the movie name") },
             modifier = Modifier.fillMaxWidth()
         )
 
@@ -251,6 +254,25 @@ fun MovieSearchScreen(vm: MovieViewModel = hiltViewModel()) {
                 }
             }
         }
+    }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun MovieSearchScreenWithAppBar(navController: NavController, vm: MovieViewModel = hiltViewModel()) {
+    Scaffold(
+        topBar = {
+            TopAppBar(
+                title = { Text("Search") },
+                navigationIcon = {
+                    IconButton(onClick = { navController.navigateUp() }) {
+                        Icon(Icons.Default.Menu, contentDescription = "Menu")
+                    }
+                }
+            )
+        }
+    ) { padding ->
+        MovieSearchScreen(vm = vm, modifier = Modifier.padding(padding))
     }
 }
 

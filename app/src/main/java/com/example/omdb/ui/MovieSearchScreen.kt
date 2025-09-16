@@ -29,6 +29,7 @@ import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Menu
 import androidx.navigation.NavController
+import com.example.omdb.data.MovieEntity
 import kotlinx.coroutines.launch
 
 @Composable
@@ -196,7 +197,7 @@ fun MovieSearchScreen(vm: MovieViewModel = hiltViewModel(), modifier: Modifier) 
                         exit = fadeOut(animationSpec = tween(300)) + shrinkVertically(animationSpec = tween(300))
                     ) {
                         movieDetails[movie.imdbID]?.let { detail ->
-                            MovieDetailCard(detail)
+                            MovieDetailCard(detail, movie)
                         }
                     }
 
@@ -306,7 +307,12 @@ fun MovieRow(movie: MovieItem, onClick: () -> Unit) {
 }
 
 @Composable
-fun MovieDetailCard(detail: MovieDetail) {
+fun MovieDetailCard(detail: MovieDetail, item: MovieItem) {
+    // CompletedViewModel'i buradan alıyoruz
+    val completedVm: CompletedViewModel = hiltViewModel()
+    var showRatingCard by remember { mutableStateOf(false) }
+    var sliderValue by remember { mutableStateOf(5f) }
+
     Card(
         modifier = Modifier
             .fillMaxWidth()
@@ -321,23 +327,69 @@ fun MovieDetailCard(detail: MovieDetail) {
 
             Spacer(Modifier.height(12.dp))
 
-            Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.Center) {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.Center
+            ) {
                 Button(
-                    onClick = { /*TODO*/ },
+                    onClick = { showRatingCard = !showRatingCard },
                     modifier = Modifier
                         .width(160.dp)
                         .defaultMinSize(minHeight = 40.dp)
                 ) {
                     Text("Add to completed")
                 }
+
                 Spacer(Modifier.width(10.dp))
+
                 Button(
-                    onClick = { /*TODO*/ },
+                    onClick = {
+                        // TODO: Watchlist için de benzer yapılacak
+                    },
                     modifier = Modifier
                         .width(160.dp)
                         .defaultMinSize(minHeight = 40.dp)
                 ) {
                     Text("Add to watchlist")
+                }
+            }
+
+            AnimatedVisibility(showRatingCard) {
+                Card(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(top = 12.dp),
+                    elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
+                ) {
+                    Column(
+                        modifier = Modifier.padding(12.dp),
+                        horizontalAlignment = Alignment.CenterHorizontally
+                    ) {
+                        Text("Give a rating (0-10)", style = MaterialTheme.typography.bodyLarge)
+
+                        Spacer(Modifier.height(8.dp))
+
+                        Slider(
+                            value = sliderValue,
+                            onValueChange = { sliderValue = it },
+                            valueRange = 0f..10f,
+                            steps = 9
+                        )
+
+                        Text("Your rating: ${sliderValue.toInt()}")
+
+                        Spacer(Modifier.height(8.dp))
+
+                        Button(onClick = {
+                            val entity = MovieEntity.fromDetail(detail, item).copy(
+                                userRating = sliderValue.toInt()
+                            )
+                            completedVm.addMovie(entity)
+                            showRatingCard = false // kapat
+                        }) {
+                            Text("Add")
+                        }
+                    }
                 }
             }
         }

@@ -30,6 +30,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Menu
 import androidx.navigation.NavController
 import com.example.omdb.data.MovieEntity
+import com.example.omdb.data.WatchlistEntity
 import kotlinx.coroutines.launch
 
 @Composable
@@ -57,6 +58,8 @@ fun MovieSearchScreen(vm: MovieViewModel = hiltViewModel(), modifier: Modifier) 
     var maxRating by remember { mutableStateOf("") }
     var filterError by remember { mutableStateOf<String?>(null) }
 
+    var isFindClicked by remember { mutableStateOf(false) }
+
 
 
     Column(modifier = Modifier
@@ -65,9 +68,6 @@ fun MovieSearchScreen(vm: MovieViewModel = hiltViewModel(), modifier: Modifier) 
     ) {
 
         Spacer(Modifier.height(72.dp))
-        //Text("Search for movies", style = MaterialTheme.typography.titleMedium)
-
-        //Spacer(Modifier.height(8.dp))
 
         OutlinedTextField(
             value = query,
@@ -84,7 +84,10 @@ fun MovieSearchScreen(vm: MovieViewModel = hiltViewModel(), modifier: Modifier) 
             }
             Spacer(Modifier.width(24.dp))
 
-            Button(onClick = {vm.goToPage(1)}, modifier = Modifier.width(140.dp).defaultMinSize(minHeight = 32.dp)) {
+            Button(onClick = {
+                vm.goToPage(1)
+                isFindClicked = true },
+                modifier = Modifier.width(140.dp).defaultMinSize(minHeight = 32.dp)) {
                 Text("Find")
             }
         }
@@ -103,13 +106,13 @@ fun MovieSearchScreen(vm: MovieViewModel = hiltViewModel(), modifier: Modifier) 
                     OutlinedTextField(
                         value = startYear,
                         onValueChange = { startYear = it },
-                        label = { Text("Start Year") },
+                        label = { Text("Min Year") },
                         modifier = Modifier.weight(1f).padding(end = 8.dp)
                     )
                     OutlinedTextField(
                         value = endYear,
                         onValueChange = { endYear = it },
-                        label = { Text("End Year") },
+                        label = { Text("Max Year") },
                         modifier = Modifier.weight(1f)
                     )
                 }
@@ -184,13 +187,19 @@ fun MovieSearchScreen(vm: MovieViewModel = hiltViewModel(), modifier: Modifier) 
             Text(text = it, color = MaterialTheme.colorScheme.error)
         }
 
-        // Liste
+        if (isFindClicked && !isLoading && movies.isEmpty() && error == null) {
+            Text(
+                text = "No movies found for \"$query\".",
+                color = MaterialTheme.colorScheme.error,
+                modifier = Modifier.align(Alignment.CenterHorizontally)
+            )
+        }
+
         LazyColumn(modifier = Modifier.fillMaxSize(), state = listState) {
             items(movies) { movie ->
                 Column {
                     MovieRow(movie, onClick = { vm.toggleMovieDetail(movie.imdbID) })
 
-                    // Eğer bu film için detay yüklenmişse, göster
                     AnimatedVisibility(
                         visible = movieDetails[movie.imdbID] != null,
                         enter = fadeIn(animationSpec = tween(300)) + expandVertically(animationSpec = tween(300)),
@@ -205,7 +214,6 @@ fun MovieSearchScreen(vm: MovieViewModel = hiltViewModel(), modifier: Modifier) 
                 }
             }
 
-            // Son olarak "Load more" butonu göstermek istersen:
             if (movies.isNotEmpty()) {
                 item {
                     Spacer(Modifier.height(8.dp))
@@ -213,17 +221,16 @@ fun MovieSearchScreen(vm: MovieViewModel = hiltViewModel(), modifier: Modifier) 
                         modifier = Modifier.fillMaxWidth(),
                         horizontalArrangement = Arrangement.Center
                     ) {
-                        // Previous Page
                         Button(
                             onClick = {
                                 if (page > 1) {
                                     vm.goToPage(page - 1)
                                     coroutineScope.launch {
-                                        listState.scrollToItem(0) // en üste kay
+                                        listState.scrollToItem(0) // en üste kaydırma
                                     }
                                 }
                             },
-                            enabled = page > 1, // 1. sayfadaysa disable
+                            enabled = page > 1,
                             modifier = Modifier.width(140.dp).defaultMinSize(minHeight = 30.dp)
                         ) {
                             Text("Previous Page")
@@ -238,12 +245,11 @@ fun MovieSearchScreen(vm: MovieViewModel = hiltViewModel(), modifier: Modifier) 
 
                         Spacer(Modifier.width(12.dp))
 
-                        // Next Page
                         Button(
                             onClick = {
                                 vm.goToPage(page + 1)
                                 coroutineScope.launch {
-                                    listState.scrollToItem(0) // en üste kay
+                                    listState.scrollToItem(0)
                                 }
                             },
                             modifier = Modifier.width(140.dp).defaultMinSize(minHeight = 30.dp)
@@ -282,14 +288,13 @@ fun MovieRow(movie: MovieItem, onClick: () -> Unit) {
     Column(modifier = Modifier
         .fillMaxWidth()
         .padding(8.dp)
-        .clickable { onClick() } // Satıra tıklanabilirlik
+        .clickable { onClick() }
     ) {
         Text(text = movie.title, fontWeight = FontWeight.Bold)
         Text(text = "Year: ${movie.year}")
 
         Spacer(Modifier.height(8.dp))
 
-        // Poster göster (Coil AsyncImage)
         if (movie.poster != "N/A") {
             AsyncImage(
                 model = movie.poster,
@@ -308,8 +313,8 @@ fun MovieRow(movie: MovieItem, onClick: () -> Unit) {
 
 @Composable
 fun MovieDetailCard(detail: MovieDetail, item: MovieItem) {
-    // CompletedViewModel'i buradan alıyoruz
     val completedVm: CompletedViewModel = hiltViewModel()
+    val watchlistVm: WatchlistViewModel = hiltViewModel()
     var showRatingCard by remember { mutableStateOf(false) }
     var sliderValue by remember { mutableStateOf(5f) }
 
@@ -344,7 +349,17 @@ fun MovieDetailCard(detail: MovieDetail, item: MovieItem) {
 
                 Button(
                     onClick = {
-                        // TODO: Watchlist için de benzer yapılacak
+                        val entity = WatchlistEntity(
+                            imdbID = item.imdbID,
+                            title = detail.title ?: "Unknown",
+                            year = detail.year ?: "Unknown",
+                            poster = item.poster,
+                            imdbRating = detail.imdbRating,
+                            genre = detail.genre,
+                            director = detail.director,
+                            plot = detail.plot
+                        )
+                        watchlistVm.addMovie(entity)
                     },
                     modifier = Modifier
                         .width(160.dp)
@@ -385,7 +400,7 @@ fun MovieDetailCard(detail: MovieDetail, item: MovieItem) {
                                 userRating = sliderValue.toInt()
                             )
                             completedVm.addMovie(entity)
-                            showRatingCard = false // kapat
+                            showRatingCard = false
                         }) {
                             Text("Add")
                         }

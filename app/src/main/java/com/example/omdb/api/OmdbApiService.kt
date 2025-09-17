@@ -6,7 +6,6 @@ import retrofit2.http.GET
 import retrofit2.http.Query
 
 interface OmdbApiService {
-    // s: search string; page: pagination (1..100)
     @GET("/")
     suspend fun searchMovies(
         @Query("s") query: String,

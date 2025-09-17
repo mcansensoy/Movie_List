@@ -1,6 +1,5 @@
 package com.example.omdb.ui
 
-import android.widget.Space
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
@@ -11,23 +10,22 @@ import androidx.compose.material.icons.filled.Menu
 import androidx.compose.material3.*
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.runtime.*
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
-import com.example.omdb.data.MovieEntity
 import coil.compose.AsyncImage
+import com.example.omdb.data.WatchlistEntity
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun CompletedScreen(navController: NavController, vm: CompletedViewModel = hiltViewModel()) {
+fun WatchlistScreen(navController: NavController, vm: WatchlistViewModel = hiltViewModel()) {
     val movies by vm.movies.collectAsState()
 
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("Completed List") },
+                title = { Text("Watchlist") },
                 navigationIcon = {
                     IconButton(onClick = { navController.navigateUp() }) {
                         Icon(Icons.Default.Menu, contentDescription = "Menu")
@@ -37,15 +35,15 @@ fun CompletedScreen(navController: NavController, vm: CompletedViewModel = hiltV
         }
     ) { padding ->
         Column(modifier = Modifier.fillMaxSize().padding(padding)) {
-            Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
-                Button(onClick = { vm.changeSort(SortType.ALPHABETICAL) }) {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween
+            ) {
+                Button(onClick = { vm.changeSort(WatchlistSortType.ALPHABETICAL) }) {
                     Text("Alphabetical")
                 }
-                Button(onClick = { vm.changeSort(SortType.RATING) }) {
+                Button(onClick = { vm.changeSort(WatchlistSortType.RATING) }) {
                     Text("IMDB Rating")
-                }
-                Button(onClick = { vm.changeSort(SortType.USER_RATING) }) {
-                    Text("User Rating")
                 }
             }
 
@@ -53,19 +51,17 @@ fun CompletedScreen(navController: NavController, vm: CompletedViewModel = hiltV
 
             LazyColumn {
                 items(movies, key = { it.imdbID }) { movie ->
-                    CompletedMovieRow(movie, onDelete = { vm.removeMovie(movie.imdbID) })
+                    WatchlistMovieRow(movie, onDelete = { vm.removeMovie(movie.imdbID) })
                     HorizontalDivider(Modifier, DividerDefaults.Thickness, DividerDefaults.color)
                 }
             }
         }
     }
-
 }
 
 @Composable
-fun CompletedMovieRow(movie: MovieEntity, onDelete: () -> Unit) {
+fun WatchlistMovieRow(movie: WatchlistEntity, onDelete: () -> Unit) {
     var expanded by remember { mutableStateOf(false) }
-
 
     Card(
         modifier = Modifier
@@ -73,19 +69,22 @@ fun CompletedMovieRow(movie: MovieEntity, onDelete: () -> Unit) {
             .padding(vertical = 8.dp)
             .clickable { expanded = !expanded },
         elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
-    ){
+    ) {
         Column(modifier = Modifier.padding(8.dp)) {
-
-            Text(movie.title, style = MaterialTheme.typography.titleMedium)
-
             Row(
-                modifier = Modifier.fillMaxWidth()
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween
             ) {
-                Text("Year: ${movie.year}")
-                Spacer(Modifier.weight(1f))
+                Column {
+                    Text(movie.title, style = MaterialTheme.typography.titleMedium)
+                    Text("Year: ${movie.year}")
+                }
 
-                if (movie.userRating != null) {
-                    Text("User: ${movie.userRating}/10")
+                IconButton(onClick = { onDelete() }) {
+                    Icon(
+                        imageVector = Icons.Default.Delete,
+                        contentDescription = "Delete movie"
+                    )
                 }
             }
 
@@ -107,15 +106,6 @@ fun CompletedMovieRow(movie: MovieEntity, onDelete: () -> Unit) {
                 Text("Genre: ${movie.genre ?: "Unknown"}")
                 Text("Director: ${movie.director ?: "Unknown"}")
                 Text("Plot: ${movie.plot ?: "Unknown"}")
-
-                Spacer(Modifier.height(8.dp))
-
-                IconButton(onClick = { onDelete() }, modifier = Modifier.align(Alignment.End)) {
-                    Icon(
-                        imageVector = Icons.Default.Delete,
-                        contentDescription = "Delete movie"
-                    )
-                }
             }
         }
     }

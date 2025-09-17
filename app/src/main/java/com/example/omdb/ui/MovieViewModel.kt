@@ -1,5 +1,6 @@
 package com.example.omdb.ui
 
+import androidx.compose.material3.Text
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.omdb.model.MovieDetail
@@ -11,13 +12,11 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
-// HiltViewModel: Hilt ViewModel lifecyle desteği sağlar
 @HiltViewModel
 class MovieViewModel @Inject constructor(
     private val repository: MovieRepository
 ) : ViewModel() {
 
-    // UI ile kolay bağlantı için StateFlow kullanıyorum
     private val _movies = MutableStateFlow<List<MovieItem>>(emptyList())
     val movies: StateFlow<List<MovieItem>> = _movies
 
@@ -49,11 +48,9 @@ class MovieViewModel @Inject constructor(
     val movieDetails: StateFlow<Map<String, MovieDetail>> = _movieDetails
 
     fun toggleMovieDetail(imdbId: String) {
-        // Eğer detay zaten gösteriliyorsa → kaldır
         if (_movieDetails.value.containsKey(imdbId)) {
             _movieDetails.value = _movieDetails.value - imdbId
         } else {
-            // movieDetailList'te varsa oradan al
             _movieDetailList.value[imdbId]?.let { detail ->
                 _movieDetails.value = _movieDetails.value + (imdbId to detail)
             }
@@ -78,9 +75,8 @@ class MovieViewModel @Inject constructor(
         applyFilters()
     }
 
-    private var lastRawMovies: List<MovieItem> = emptyList() // filtresiz gelen listeyi tut
+    private var lastRawMovies: List<MovieItem> = emptyList()
 
-    // Arama fonksiyonu
     fun search(query: String, page: Int) {
         viewModelScope.launch {
             _isLoading.value = true
@@ -89,18 +85,20 @@ class MovieViewModel @Inject constructor(
                 val response = repository.searchMovies(query, page)
                 lastRawMovies = response.search ?: emptyList()
 
-                // Önce movieDetailList'i temizle
+                if (lastRawMovies.isEmpty()) {
+                    _error.value = "No movies found for \"$query\""
+                }
+
                 _movieDetailList.value = emptyMap()
 
-                // Her film için detay çek ve map'e ekle
+                // Her film için detay çekip ve map'e eklemece
                 lastRawMovies.forEach { movie ->
                     launch {
                         try {
                             val detail = repository.getMovieDetail(movie.imdbID)
                             _movieDetailList.value = _movieDetailList.value + (movie.imdbID to detail)
-                            applyFilters() // her yeni detail geldikçe filtreyi tekrar uygula
+                            applyFilters()
                         } catch (e: Exception) {
-                            // hata olursa Unknown detail ekleyelim
                             _movieDetailList.value = _movieDetailList.value + (movie.imdbID to MovieDetail(
                                 title = null,
                                 year = null,
@@ -150,9 +148,9 @@ class MovieViewModel @Inject constructor(
             _yearRange.value = start..end
             _ratingRange.value = min..max
             applyFilters()
-            true // başarılı
+            true
         } catch (e: Exception) {
-            false // sayı dışında bir şey girilmiş
+            false
         }
     }
 

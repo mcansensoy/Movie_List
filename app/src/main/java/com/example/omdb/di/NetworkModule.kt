@@ -16,18 +16,17 @@ import javax.inject.Singleton
 import java.util.concurrent.TimeUnit
 
 @Module
-@InstallIn(SingletonComponent::class) // application scope
+@InstallIn(SingletonComponent::class) // application scope'unda
 object NetworkModule {
 
     private const val BASE_URL = "https://www.omdbapi.com/"
 
-    // ApiKey interceptor: her isteğe ?apikey=... ekler
     @Provides
     fun provideApiKeyInterceptor(): Interceptor = Interceptor { chain ->
         val original = chain.request()
         val originalUrl: HttpUrl = original.url
         val url = originalUrl.newBuilder()
-            .addQueryParameter("apikey", BuildConfig.OMDB_API_KEY) // BuildConfig içinden alıyoruz
+            .addQueryParameter("apikey", BuildConfig.OMDB_API_KEY)
             .build()
         val request = original.newBuilder().url(url).build()
         chain.proceed(request)

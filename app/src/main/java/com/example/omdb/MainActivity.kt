@@ -17,8 +17,8 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import com.example.omdb.ui.*
 
-// @AndroidEntryPoint: Hilt injection'ı Activity seviyesinde açar.
-// Bu sayede Composable içinde `hiltViewModel()` kullanabiliriz.
+// @AndroidEntryPoint: Hilt injection'ı Activity seviyesinde açıyormuş
+// Bu sayede Composable içinde hiltViewModel() kullanabiliyormuşuz
 @AndroidEntryPoint
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -45,7 +45,7 @@ class MainActivity : ComponentActivity() {
                             CompletedScreen(navController)
                         }
                         composable(NavRoutes.Watchlist.route) {
-                            PlaceholderScreen("Watchlist (yakında)")
+                            WatchlistScreen(navController)
                         }
                     }
                 }

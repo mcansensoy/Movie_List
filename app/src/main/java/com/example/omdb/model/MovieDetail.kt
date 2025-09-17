@@ -2,7 +2,6 @@ package com.example.omdb.model
 
 import com.google.gson.annotations.SerializedName
 
-// OMDb 'i=' request response
 data class MovieDetail(
     @SerializedName("Title") val title: String?,
     @SerializedName("Year") val year: String?,

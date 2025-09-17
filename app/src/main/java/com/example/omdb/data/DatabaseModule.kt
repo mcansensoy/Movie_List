@@ -14,10 +14,6 @@ import dagger.hilt.android.qualifiers.ApplicationContext
 @InstallIn(SingletonComponent::class)
 object DatabaseModule {
 
-    /*@Provides
-    @Singleton
-    fun provideDatabase(@ApplicationContext app: Context): MovieDatabase =
-        Room.databaseBuilder(app, MovieDatabase::class.java, "movie_db").build()*/
     @Provides
     @Singleton
     fun provideDatabase(@ApplicationContext app: Context): MovieDatabase =
@@ -28,4 +24,8 @@ object DatabaseModule {
     @Provides
     @Singleton
     fun provideMovieDao(db: MovieDatabase): MovieDao = db.movieDao()
+
+    @Provides
+    @Singleton
+    fun provideWatchlistDao(db: MovieDatabase): WatchlistDao = db.watchlistDao()
 }
